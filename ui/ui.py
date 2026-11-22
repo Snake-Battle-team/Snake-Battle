@@ -15,6 +15,8 @@ from typing import TYPE_CHECKING
 
 import pygame
 
+from game.contracts import GameStatus
+
 # Imported only for type hints, so the UI has no runtime dependency on the game logic layer.
 if TYPE_CHECKING:
     from game.food import Food
@@ -69,15 +71,14 @@ COLOR_BUTTON: Color = (60, 90, 170)
 COLOR_BUTTON_HOVER: Color = (90, 130, 230)
 PANEL_WIDTH = 360
 PANEL_HEIGHT = 240
-STATUS_RUNNING = "RUNNING"
 
 # Title shown on the overlay for each game status
-SCREEN_TITLES: dict[str, str] = {
-    "READY": "Snake Battle",
-    "PAUSE": "Paused",
-    "PLAYER_WIN": "You win!",
-    "AI_WIN": "The AI wins!",
-    "DRAW": "Draw!",
+SCREEN_TITLES: dict[GameStatus, str] = {
+    GameStatus.READY: "Snake Battle",
+    GameStatus.PAUSE: "Paused",
+    GameStatus.PLAYER_WIN: "You win!",
+    GameStatus.AI_WIN: "The AI wins!",
+    GameStatus.DRAW: "Draw!",
 }
 
 @dataclass
@@ -139,19 +140,6 @@ class Button:
             bool: True if the pixel is inside the button.
         """
         return self.rect.collidepoint(position)
-
-def status_name(state: GameState) -> str:
-    """Return the game status as a plain string.
-
-    Works whether the logic stores the status as a string or as an Enum.
-
-    Args:
-        state (GameState): Current game state.
-
-    Returns:
-        str: Status name, for example "RUNNING" or "PAUSE".
-    """
-    return getattr(state.status, "name", state.status)
 
 class UI:
     """Building the interface using Pygame. This implementation does not define game rules; it is created solely by reading the game state (GameState).
@@ -264,13 +252,14 @@ class UI:
         Args:
             state (GameState): Current game state, read for its status.
         """
-        if status_name(state) == STATUS_RUNNING:
+        status = state.status
+        if status == GameStatus.RUNNING:
             return
         panel = self.draw_overlay()
-        title = SCREEN_TITLES.get(status_name(state), "")
+        title = SCREEN_TITLES.get(status, "")
         self.draw_text(title, self.tittle_font, (panel.centerx, panel.top + 50))
 
-        if status_name(state) == "READY":
+        if status == GameStatus.READY:
             button = Button("Start", (panel.centerx, panel.centery + 30))
             button.draw(self.screen, self.font)
 
