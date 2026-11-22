@@ -71,6 +71,7 @@ COLOR_BUTTON: Color = (60, 90, 170)
 COLOR_BUTTON_HOVER: Color = (90, 130, 230)
 PANEL_WIDTH = 360
 PANEL_HEIGHT = 240
+RESULT_STATUSES = (GameStatus.PLAYER_WIN, GameStatus.AI_WIN, GameStatus.DRAW)
 
 # Title shown on the overlay for each game status
 SCREEN_TITLES: dict[GameStatus, str] = {
@@ -267,6 +268,9 @@ class UI:
             restart = Button("Restart", (panel.centerx, panel.centery + 55))
             resume.draw(self.screen, self.font)
             restart.draw(self.screen, self.font)
+        elif status in RESULT_STATUSES:
+            button = Button("Restart", (panel.centerx, panel.centery + 30))
+            button.draw(self.screen, self.font)
 
     def draw_text(self, text: str, font: pygame.font.Font, center: tuple[int, int]) -> None:
         """Draw a text centered on the given pixel.
