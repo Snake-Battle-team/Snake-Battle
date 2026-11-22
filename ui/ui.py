@@ -69,6 +69,15 @@ PANEL_WIDTH = 360
 PANEL_HEIGHT = 240
 STATUS_RUNNING = "RUNNING"
 
+# Title shown on the overlay for each game status
+SCREEN_TITLES: dict[str, str] = {
+    "READY": "Snake Battle",
+    "PAUSE": "Paused",
+    "PLAYER_WIN": "You win!",
+    "AI_WIN": "The AI wins!",
+    "DRAW": "Draw!",
+}
+
 @dataclass
 class PlayerInput:
     """What the player asked for during one call to UI.read_input.
@@ -127,6 +136,7 @@ class UI:
         pygame.display.set_caption("Snake Battle")
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont("arial", 22)
+        self.tittle_font = pygame.font.SysFont("arial", 40, bold=True)
         self._last_step_ms = 0
 
     def cell_rect (self, x, y):
@@ -209,9 +219,23 @@ class UI:
         """
         if status_name(state) == STATUS_RUNNING:
             return
-        self._draw_overlay()
+        panel = self.draw_overlay()
+        title = SCREEN_TITLES.get(status_name(state), "")
+        self.draw_text(title, self.tittle_font, (panel.centerx, panel.top + 50))
 
-    def _draw_overlay(self) -> pygame.Rect:
+    def draw_text(self, text: str, font: pygame.font.Font, center: tuple[int, int]) -> None:
+        """Draw a text centered on the given pixel.
+
+        Args:
+            text (str): Text to draw.
+            font (pygame.font.Font): Font used to render the text.
+            center (tuple[int, int]): Pixel (x, y) where the text is centered.
+        """
+
+        image = font.render(text, True, COLOR_TEXT)
+        self.screen.blit(image, image.get_rect(center=center))
+
+    def draw_overlay(self) -> pygame.Rect:
         """Darken the whole window and draw a centered panel on top.
 
         Returns:
