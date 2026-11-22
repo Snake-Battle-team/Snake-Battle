@@ -259,17 +259,32 @@ class UI:
         title = SCREEN_TITLES.get(status, "")
         self.draw_text(title, self.tittle_font, (panel.centerx, panel.top + 50))
 
+        for button in self.screen_buttons(status, panel):
+            button.draw(self.screen, self.font)
+
+    def screen_buttons(self, status: GameStatus, panel: pygame.Rect) -> list[Button]:
+        """Build the buttons of the overlay screen for a game status.
+
+        Args:
+            status (GameStatus): Status whose screen is being drawn.
+            panel (pygame.Rect): Panel where the buttons are placed.
+
+        Returns:
+            list[Button]: Buttons of that screen, or an empty list if the
+                status has none.
+        """
+        x = panel.centerx
+        y = panel.centery
         if status == GameStatus.READY:
-            button = Button("Start", (panel.centerx, panel.centery + 30))
-            button.draw(self.screen, self.font)
-        elif status == GameStatus.PAUSE:
-            resume = Button("Resume", (panel.centerx, panel.centery - 5))
-            restart = Button("Restart", (panel.centerx, panel.centery + 55))
-            resume.draw(self.screen, self.font)
-            restart.draw(self.screen, self.font)
-        elif status in RESULT_STATUSES:
-            button = Button("Restart", (panel.centerx, panel.centery + 30))
-            button.draw(self.screen, self.font)
+            return [Button("Start", (x, y + 30))]
+        if status == GameStatus.PAUSE:
+            return [
+                Button("Resume", (x, y - 5)),
+                Button("Restart", (x, y + 55)),
+            ]
+        if status in RESULT_STATUSES:
+            return [Button("Restart", (x, y + 30))]
+        return []
 
     def draw_text(self, text: str, font: pygame.font.Font, center: tuple[int, int]) -> None:
         """Draw a text centered on the given pixel.
