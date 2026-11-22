@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 
 import pygame
 
-from game.contracts import GameStatus
+from game.contracts import Direction, GameStatus
 
 # Imported only for type hints, so the UI has no runtime dependency on the game logic layer.
 if TYPE_CHECKING:
@@ -24,7 +24,6 @@ if TYPE_CHECKING:
     from game.snake import Snake
 
 Color = tuple[int, int, int]
-Direction = tuple[int, int]
 
 RGBA = tuple[int,int, int]
 
@@ -52,14 +51,14 @@ RIGHT: Direction = (1, 0)
 
 # Keys that move the player's snake (arrows and WASD)
 KEY_BINDINGS: dict[int, Direction] = {
-    pygame.K_UP: UP,
-    pygame.K_w: UP,
-    pygame.K_DOWN: DOWN,
-    pygame.K_s: DOWN,
-    pygame.K_LEFT: LEFT,
-    pygame.K_a: LEFT,
-    pygame.K_RIGHT: RIGHT,
-    pygame.K_d: RIGHT,
+    pygame.K_UP: Direction.UP,
+    pygame.K_w: Direction.UP,
+    pygame.K_DOWN: Direction.DOWN,
+    pygame.K_s: Direction.DOWN,
+    pygame.K_LEFT: Direction.LEFT,
+    pygame.K_a: Direction.LEFT,
+    pygame.K_RIGHT: Direction.RIGHT,
+    pygame.K_d: Direction.RIGHT,
 }
 
 STEP_INTERVAL_MS = 175  # Time between game updates, in milliseconds
