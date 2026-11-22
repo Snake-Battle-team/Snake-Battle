@@ -24,6 +24,8 @@ if TYPE_CHECKING:
 Color = tuple[int, int, int]
 Direction = tuple[int, int]
 
+RGBA = tuple[int,int, int]
+
 # Board layout (the final board size is still to be defined by the team)
 CELL_SIZE = 30
 HUD_HEIGHT = 50
@@ -60,6 +62,13 @@ KEY_BINDINGS: dict[int, Direction] = {
 
 STEP_INTERVAL_MS = 175  # Time between game updates, in milliseconds
 
+# Overlay screens (start, pause, result)
+COLOR_OVERLAY: RGBA = (0, 0, 0, 160)    # The last value is the opacity
+COLOR_PANEL: Color = (30, 30, 45)
+PANEL_WIDTH = 360
+PANEL_HEIGHT = 240
+STATUS_RUNNING = "RUNNING"
+
 @dataclass
 class PlayerInput:
     """What the player asked for during one call to UI.read_input.
@@ -74,6 +83,19 @@ class PlayerInput:
     quit: bool = False
     direction: Direction | None = None
     toggle_pause: bool = False
+
+def status_name(state: GameState) -> str:
+    """Return the game status as a plain string.
+
+    Works whether the logic stores the status as a string or as an Enum.
+
+    Args:
+        state (GameState): Current game state.
+
+    Returns:
+        str: Status name, for example "RUNNING" or "PAUSE".
+    """
+    return getattr(state.status, "name", state.status)
 
 class UI:
     """Building the interface using Pygame. This implementation does not define game rules; it is created solely by reading the game state (GameState).
@@ -174,7 +196,37 @@ class UI:
         self.draw_snake(state.AI, COLOR_AI_BODY, COLOR_AI_HEAD)
         self.draw_walls()
         self.draw_hud(state)
+        self.draw_screen(state)
         pygame.display.flip()
+
+    def draw_screen(self, state: GameState) -> None:
+        """Draw the overlay screen that matches the game status.
+
+        Nothing is drawn while the game is running.
+
+        Args:
+            state (GameState): Current game state, read for its status.
+        """
+        if status_name(state) == STATUS_RUNNING:
+            return
+        self._draw_overlay()
+
+    def _draw_overlay(self) -> pygame.Rect:
+        """Darken the whole window and draw a centered panel on top.
+
+        Returns:
+            pygame.Rect: The panel, so callers can place content inside it.
+        """
+        # SRCALPHA lets the surface be semi-transparent
+        shade = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        shade.fill(COLOR_OVERLAY)
+        self.screen.blit(shade, (0, 0))
+
+        panel = pygame.Rect(0, 0, PANEL_WIDTH, PANEL_HEIGHT)
+        panel.center = (self.width // 2, self.height // 2)
+        pygame.draw.rect(self.screen, COLOR_PANEL, panel, border_radius=12)
+        pygame.draw.rect(self.screen, COLOR_WALL, panel, 3, border_radius=12)
+        return panel
 
     def draw_grid(self) -> None:
         """Draw the border of every board cell to form the grid
