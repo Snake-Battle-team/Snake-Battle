@@ -12,6 +12,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+from enum import Enum
 
 import pygame
 
@@ -81,6 +82,14 @@ SCREEN_TITLES: dict[GameStatus, str] = {
     GameStatus.DRAW: "Draw!",
 }
 
+class UIAction(Enum):
+    """Actions the player can request by clicking a button."""
+
+    START = "START"
+    RESUME = "RESUME"
+    RESTART = "RESTART"
+    PAUSE = "PAUSE"
+
 @dataclass
 class PlayerInput:
     """What the player asked for during one call to UI.read_input.
@@ -90,30 +99,36 @@ class PlayerInput:
         direction (Direction | None): Last direction key pressed, or None
             if no direction key was pressed.
         toggle_pause (bool): True if the player pressed the pause key (P).
+        action (UIAction | None): Button the player clicked, or None if no
+            button was clicked.
     """
 
     quit: bool = False
     direction: Direction | None = None
     toggle_pause: bool = False
+    action: UIAction | None = None
 
 class Button:
     """Clickable rectangle with a text label.
 
     Attributes:
         label (str): Text shown inside the button.
+        action (UIAction): What the button requests when it is clicked.
         rect (pygame.Rect): Area of the button on the screen.
     """
-   
-    def __init__(self, label: str, center: tuple[int, int], width: int = 160, height: int = 44) -> None:
+
+    def __init__(self, label: str, center: tuple[int, int], action: UIAction, width: int = 160, height: int = 44) -> None:
         """Create a button centered on a pixel.
 
         Args:
             label (str): Text shown inside the button.
             center (tuple[int, int]): Pixel (x, y) of the button center.
+            action (UIAction): What the button requests when it is clicked.
             width (int): Button width, in pixels.
             height (int): Button height, in pixels.
         """
         self.label = label
+        self.action = action
         self.rect = pygame.Rect(0, 0, width, height)
         self.rect.center = center
 
@@ -173,6 +188,8 @@ class UI:
         self.font = pygame.font.SysFont("arial", 22)
         self.tittle_font = pygame.font.SysFont("arial", 40, bold=True)
         self._last_step_ms = 0
+        # Buttons visible in the last drawn frame, used to detect clicks
+        self.buttons: list[Button] = []
 
     def cell_rect (self, x, y):
         """Covert a board cell into a pixel rectangle
@@ -195,7 +212,7 @@ class UI:
         rule and is decided by the game logic, not here.
 
         Returns:
-            PlayerInput: Requested direction, pause toggle and quit flag.
+            PlayerInput: Requested direction, pause indicator, exit signal, and action of the pressed button.
         """
         result = PlayerInput()
         for event in pygame.event.get():
@@ -209,6 +226,11 @@ class UI:
                 elif event.key in KEY_BINDINGS:
                     # If several keys arrive at once, the last one wins
                     result.direction = KEY_BINDINGS[event.key]
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                # Button 1 is the left click
+                for button in self.buttons:
+                    if button.contains(event.pos):
+                        result.action = button.action
         return result
 
     def step_due(self) -> bool:
@@ -234,6 +256,7 @@ class UI:
         """        
 
         self.screen.fill(COLOR_BACKGROUND)
+        self.buttons = []
         self.draw_grid()
         self.draw_foods(state.foods)
 
@@ -261,6 +284,7 @@ class UI:
 
         for button in self.screen_buttons(status, panel):
             button.draw(self.screen, self.font)
+            self.buttons.append(button)
 
     def screen_buttons(self, status: GameStatus, panel: pygame.Rect) -> list[Button]:
         """Build the buttons of the overlay screen for a game status.
@@ -276,14 +300,14 @@ class UI:
         x = panel.centerx
         y = panel.centery
         if status == GameStatus.READY:
-            return [Button("Start", (x, y + 30))]
+            return [Button("Start", (x, y + 30), UIAction.START)]
         if status == GameStatus.PAUSE:
             return [
-                Button("Resume", (x, y - 5)),
-                Button("Restart", (x, y + 55)),
+                Button("Resume", (x, y - 5), UIAction.RESUME),
+                Button("Restart", (x, y + 55), UIAction.RESTART),
             ]
         if status in RESULT_STATUSES:
-            return [Button("Restart", (x, y + 30))]
+            return [Button("Restart", (x, y + 30), UIAction.RESTART)]
         return []
 
     def draw_text(self, text: str, font: pygame.font.Font, center: tuple[int, int]) -> None:
