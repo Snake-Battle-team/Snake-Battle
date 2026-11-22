@@ -262,6 +262,11 @@ class UI:
         if status == GameStatus.READY:
             button = Button("Start", (panel.centerx, panel.centery + 30))
             button.draw(self.screen, self.font)
+        elif status == GameStatus.PAUSE:
+            resume = Button("Resume", (panel.centerx, panel.centery - 5))
+            restart = Button("Restart", (panel.centerx, panel.centery + 55))
+            resume.draw(self.screen, self.font)
+            restart.draw(self.screen, self.font)
 
     def draw_text(self, text: str, font: pygame.font.Font, center: tuple[int, int]) -> None:
         """Draw a text centered on the given pixel.
