@@ -7,7 +7,22 @@ Luis Felipe Zubieta Rincón
 Suhayl Mariana Barrantes Alvarado
 """
 
+from __future__ import annotations
+
+from collections.abc import Iterable
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
 import pygame
+
+# Imported only for type hints, so the UI has no runtime dependency on the game logic layer.
+if TYPE_CHECKING:
+    from game.food import Food
+    from game.game_state import GameState
+    from game.snake import Snake
+
+Color = tuple[int, int, int]
+Direction = tuple[int, int]
 
 # Board layout (the final board size is still to be defined by the team)
 CELL_SIZE = 30
@@ -15,15 +30,50 @@ HUD_HEIGHT = 50
 FPS = 60
 
 # Colors (R, G, B) of the design
-COLOR_BACKGROUND = (15, 15, 20)
-COLOR_GRID = (28, 28, 36)
-COLOR_WALL = (40, 90, 200)
-COLOR_PLAYER_BODY = (60, 200, 80)
-COLOR_PLAYER_HEAD = (140, 255, 150)
-COLOR_AI_BODY = (220, 140, 40)
-COLOR_AI_HEAD = (255, 200, 110)
-COLOR_FOOD = (230, 40, 40)
-COLOR_TEXT = (235, 235, 235)
+COLOR_BACKGROUND: Color = (15, 15, 20)
+COLOR_GRID: Color = (28, 28, 36)
+COLOR_WALL: Color = (40, 90, 200)
+COLOR_PLAYER_BODY: Color = (60, 200, 80)
+COLOR_PLAYER_HEAD: Color = (140, 255, 150)
+COLOR_AI_BODY: Color = (220, 140, 40)
+COLOR_AI_HEAD: Color = (255, 200, 110)
+COLOR_FOOD: Color = (230, 40, 40)
+COLOR_TEXT: Color = (235, 235, 235)
+
+# Directions as (x, y). The y axis grows downwards on the screen.
+UP: Direction = (0, -1)
+DOWN: Direction = (0, 1)
+LEFT: Direction = (-1, 0)
+RIGHT: Direction = (1, 0)
+
+# Keys that move the player's snake (arrows and WASD)
+KEY_BINDINGS: dict[int, Direction] = {
+    pygame.K_UP: UP,
+    pygame.K_w: UP,
+    pygame.K_DOWN: DOWN,
+    pygame.K_s: DOWN,
+    pygame.K_LEFT: LEFT,
+    pygame.K_a: LEFT,
+    pygame.K_RIGHT: RIGHT,
+    pygame.K_d: RIGHT,
+}
+
+STEP_INTERVAL_MS = 175  # Time between game updates, in milliseconds
+
+@dataclass
+class PlayerInput:
+    """What the player asked for during one call to UI.read_input.
+
+    Attributes:
+        quit (bool): True if the player closed the window or pressed ESC.
+        direction (Direction | None): Last direction key pressed, or None
+            if no direction key was pressed.
+        toggle_pause (bool): True if the player pressed the pause key (P).
+    """
+
+    quit: bool = False
+    direction: Direction | None = None
+    toggle_pause: bool = False
 
 class UI:
     """Building the interface using Pygame. This implementation does not define game rules; it is created solely by reading the game state (GameState).
@@ -55,6 +105,7 @@ class UI:
         pygame.display.set_caption("Snake Battle")
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont("arial", 22)
+        self._last_step_ms = 0
 
     def cell_rect (self, x, y):
         """Covert a board cell into a pixel rectangle
@@ -68,6 +119,45 @@ class UI:
         """        
 
         return pygame.Rect(x*CELL_SIZE, y*CELL_SIZE, CELL_SIZE, CELL_SIZE)
+
+    def read_input(self) -> PlayerInput:
+        """Read the pending keyboard and window events.
+
+        The UI only reports what the player asked for. Whether a direction
+        is allowed (for example, reversing into the own body) is a game
+        rule and is decided by the game logic, not here.
+
+        Returns:
+            PlayerInput: Requested direction, pause toggle and quit flag.
+        """
+        result = PlayerInput()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                result.quit = True
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    result.quit = True
+                elif event.key == pygame.K_p:
+                    result.toggle_pause = True
+                elif event.key in KEY_BINDINGS:
+                    # If several keys arrive at once, the last one wins
+                    result.direction = KEY_BINDINGS[event.key]
+        return result
+
+    def step_due(self) -> bool:
+        """Tell whether it is time to run one game update.
+
+        Drawing runs at FPS frames per second, but the snakes must move
+        much slower, once every STEP_INTERVAL_MS milliseconds.
+
+        Returns:
+            bool: True if enough time has passed since the last update.
+        """
+        now = pygame.time.get_ticks()
+        if now - self._last_step_ms >= STEP_INTERVAL_MS:
+            self._last_step_ms = now
+            return True
+        return False
 
     def draw(self, state) -> None:
         """Draw one complete frame from the given state.
