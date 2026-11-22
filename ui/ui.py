@@ -65,6 +65,8 @@ STEP_INTERVAL_MS = 175  # Time between game updates, in milliseconds
 # Overlay screens (start, pause, result)
 COLOR_OVERLAY: RGBA = (0, 0, 0, 160)    # The last value is the opacity
 COLOR_PANEL: Color = (30, 30, 45)
+COLOR_BUTTON: Color = (60, 90, 170)
+COLOR_BUTTON_HOVER: Color = (90, 130, 230)
 PANEL_WIDTH = 360
 PANEL_HEIGHT = 240
 STATUS_RUNNING = "RUNNING"
@@ -92,6 +94,51 @@ class PlayerInput:
     quit: bool = False
     direction: Direction | None = None
     toggle_pause: bool = False
+
+class Button:
+    """Clickable rectangle with a text label.
+
+    Attributes:
+        label (str): Text shown inside the button.
+        rect (pygame.Rect): Area of the button on the screen.
+    """
+   
+    def __init__(self, label: str, center: tuple[int, int], width: int = 160, height: int = 44) -> None:
+        """Create a button centered on a pixel.
+
+        Args:
+            label (str): Text shown inside the button.
+            center (tuple[int, int]): Pixel (x, y) of the button center.
+            width (int): Button width, in pixels.
+            height (int): Button height, in pixels.
+        """
+        self.label = label
+        self.rect = pygame.Rect(0, 0, width, height)
+        self.rect.center = center
+
+    def draw(self, screen: pygame.Surface, font: pygame.font.Font) -> None:
+        """Draw the button, highlighted if the mouse is over it.
+
+        Args:
+            screen (pygame.Surface): Surface where the button is drawn.
+            font (pygame.font.Font): Font used for the label.
+        """
+        hovered = self.rect.collidepoint(pygame.mouse.get_pos())
+        color = COLOR_BUTTON_HOVER if hovered else COLOR_BUTTON
+        pygame.draw.rect(screen, color, self.rect, border_radius=8)
+        image = font.render(self.label, True, COLOR_TEXT)
+        screen.blit(image, image.get_rect(center=self.rect.center))
+
+    def contains(self, position: tuple[int, int]) -> bool:
+        """Tell whether a pixel is inside the button.
+
+        Args:
+            position (tuple[int, int]): Pixel (x, y), for example a click.
+
+        Returns:
+            bool: True if the pixel is inside the button.
+        """
+        return self.rect.collidepoint(position)
 
 def status_name(state: GameState) -> str:
     """Return the game status as a plain string.
@@ -222,6 +269,10 @@ class UI:
         panel = self.draw_overlay()
         title = SCREEN_TITLES.get(status_name(state), "")
         self.draw_text(title, self.tittle_font, (panel.centerx, panel.top + 50))
+
+        if status_name(state) == "READY":
+            button = Button("Start", (panel.centerx, panel.centery + 30))
+            button.draw(self.screen, self.font)
 
     def draw_text(self, text: str, font: pygame.font.Font, center: tuple[int, int]) -> None:
         """Draw a text centered on the given pixel.
