@@ -395,3 +395,10 @@ class UI:
         self.screen.blit(self.font.render(player_text, True, COLOR_TEXT), (10, top + 14))
         ai_image = self.font.render(ai_text, True, COLOR_TEXT)
         self.screen.blit(ai_image, (self.width - ai_image.get_width()-10, top + 14))
+
+        # The pause button is only useful while the game is running
+        if state.status == GameStatus.RUNNING:
+            center = (self.width // 2, top + HUD_HEIGHT // 2)
+            pause_button = Button("Pause", center, UIAction.PAUSE, width=90, height=30)
+            pause_button.draw(self.screen, self.font)
+            self.buttons.append(pause_button)
