@@ -53,3 +53,17 @@ class SnakeMovementTests(unittest.TestCase):
 
         self.assertEqual(self.snake.body, [(3, 2), (2, 2)])
         self.assertEqual(self.snake.direction, Direction.RIGHT)
+
+    def test_normal_move_releases_the_tail(self) -> None:
+        """A normal move releases the tail and preserves the original body."""
+        projected = self.snake.project_body((4, 2))
+
+        self.assertEqual(projected, [(4, 2), (3, 2)])
+        self.assertEqual(self.snake.body, [(3, 2), (2, 2)])
+
+    def test_growth_keeps_the_tail(self) -> None:
+        """A growing move keeps the tail and preserves the original body."""
+        projected = self.snake.project_body((4, 2), grow=True)
+
+        self.assertEqual(projected, [(4, 2), (3, 2), (2, 2)])
+        self.assertEqual(self.snake.body, [(3, 2), (2, 2)])
