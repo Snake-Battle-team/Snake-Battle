@@ -75,3 +75,21 @@ class Snake:
             next_head = (head_x + dx, head_y + dy)
 
         return direction, next_head
+
+    def project_body(self, next_head: Position, grow: bool = False) -> list[Position]:
+        """Calculate the cells the snake would occupy after one move.
+
+        Args:
+            next_head (Position): Head position returned by plan_move().
+            grow (bool): Whether the tail stays in place during this move.
+                Defaults to False.
+
+        Returns:
+            list[Position]: A new list of segments in head-to-tail order.
+                The snake's current body remains unchanged.
+        """
+        projected = [next_head]
+        projected.extend(self.body)
+        if not grow:
+            projected.pop()
+        return projected
