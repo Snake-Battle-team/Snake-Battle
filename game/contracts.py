@@ -17,6 +17,12 @@ Position = Tuple[int, int]
 
 
 class Direction(Enum):
+    """Describe how the snake's head moves one cell on the board.
+
+    Moving left or right changes the column.
+    Moving up or down changes the row.
+    """
+
     UP = (0, -1)
     DOWN = (0, 1)
     LEFT = (-1, 0)
@@ -24,6 +30,15 @@ class Direction(Enum):
 
 
 class GameStatus(Enum):
+    """Represent the current stage or final result of a match.
+
+    READY means the match is waiting to start. During RUNNING, both
+    snakes can move. PAUSE suspends movement until play resumes.
+
+    PLAYER_WIN and AI_WIN identify the surviving snake. DRAW means
+    both snakes were eliminated during the same turn.
+    """
+    
     READY = "READY"
     RUNNING = "RUNNING"
     PAUSE = "PAUSE"
