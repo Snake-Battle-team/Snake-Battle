@@ -57,3 +57,21 @@ class CollisionTests(unittest.TestCase):
         result = resolve_collisions(self.board, player_body, ai_body)
 
         self.assertEqual(result, GameStatus.AI_WIN)
+
+    def test_both_heads_reach_the_same_cell(self) -> None:
+        """Declare a draw when both heads reach the same cell."""
+        player_body = [(2, 2), (1, 2)]
+        ai_body = [(2, 2), (3, 2), (4, 2)]
+
+        result = resolve_collisions(self.board, player_body, ai_body)
+
+        self.assertEqual(result, GameStatus.DRAW)
+
+    def test_both_snakes_hit_different_obstacles(self) -> None:
+        """Declare a draw when both snakes crash separately in one step."""
+        player_body = [(5, 1), (4, 1)]
+        ai_body = [(2, 2), (2, 3), (3, 3), (3, 2), (2, 2)]
+
+        result = resolve_collisions(self.board, player_body, ai_body)
+
+        self.assertEqual(result, GameStatus.DRAW)
