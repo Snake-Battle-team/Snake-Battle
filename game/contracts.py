@@ -17,9 +17,10 @@ Position = Tuple[int, int]
 
 
 class Direction(Enum):
-    """Represent a one-cell move as a (dx, dy) offset.
+    """Describe how the snake's head moves one cell on the board.
 
-    Moving right increases the column. Moving down increases the row.
+    Moving left or right changes the column.
+    Moving up or down changes the row.
     """
 
     UP = (0, -1)
