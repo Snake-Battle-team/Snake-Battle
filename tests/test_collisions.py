@@ -75,3 +75,21 @@ class CollisionTests(unittest.TestCase):
         result = resolve_collisions(self.board, player_body, ai_body)
 
         self.assertEqual(result, GameStatus.DRAW)
+
+    def test_player_enters_cell_released_by_opponents_tail(self) -> None:
+        """Keep the match running when the opponent's tail leaves the cell."""
+        player_body = [(2, 2), (2, 1)]
+        ai_body = [(4, 2), (3, 2)]
+
+        result = resolve_collisions(self.board, player_body, ai_body)
+
+        self.assertEqual(result, GameStatus.RUNNING)
+
+    def test_player_hits_opponents_tail_when_it_stays_in_place(self) -> None:
+        """Award the win to the AI when growth keeps its tail in the cell."""
+        player_body = [(2, 2), (2, 1)]
+        ai_body = [(4, 2), (3, 2), (2, 2)]
+
+        result = resolve_collisions(self.board, player_body, ai_body)
+
+        self.assertEqual(result, GameStatus.AI_WIN)
