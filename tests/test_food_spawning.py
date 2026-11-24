@@ -54,3 +54,20 @@ class FoodSpawningTests(unittest.TestCase):
         self.assertIn((0, 1), positions)
         self.assertIn((1, 1), positions)
         self.assertEqual(len(positions & {(2, 1), (3, 1)}), 1)
+
+    def test_single_free_cell_receives_one_food_item(self) -> None:
+        """Place one food item when only one cell is free."""
+        self.state.board = Board(5, 1)
+
+        replenish_food(self.state)
+
+        positions = [food.position for food in self.state.foods]
+        self.assertEqual(positions, [(4, 0)])
+
+    def test_full_board_adds_no_food(self) -> None:
+        """Leave the food list empty when the snakes occupy every cell."""
+        self.state.board = Board(4, 1)
+
+        replenish_food(self.state)
+
+        self.assertEqual(self.state.foods, [])
